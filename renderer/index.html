@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:">
+  <title>DevManager</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Custom title bar -->
+    <div class="titlebar">
+      <div class="titlebar-drag">
+        <svg class="titlebar-icon" viewBox="0 0 16 16" width="14" height="14">
+          <circle cx="8" cy="8" r="6" fill="#3b82f6"/>
+          <rect x="5" y="7" width="6" height="2" rx="0.5" fill="#fff"/>
+          <rect x="7" y="5" width="2" height="6" rx="0.5" fill="#fff"/>
+        </svg>
+        <span class="titlebar-title">DevManager</span>
+      </div>
+      <div class="titlebar-controls">
+        <button id="win-minimize" class="titlebar-btn" aria-label="Minimize">
+          <svg width="10" height="1" viewBox="0 0 10 1"><rect width="10" height="1" fill="currentColor"/></svg>
+        </button>
+        <button id="win-maximize" class="titlebar-btn" aria-label="Maximize">
+          <svg width="10" height="10" viewBox="0 0 10 10"><rect x="0.5" y="0.5" width="9" height="9" fill="none" stroke="currentColor" stroke-width="1"/></svg>
+        </button>
+        <button id="win-close" class="titlebar-btn titlebar-btn-close" aria-label="Close">
+          <svg width="10" height="10" viewBox="0 0 10 10"><line x1="0" y1="0" x2="10" y2="10" stroke="currentColor" stroke-width="1.2"/><line x1="10" y1="0" x2="0" y2="10" stroke="currentColor" stroke-width="1.2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Toolbar -->
+    <header class="toolbar">
+      <button id="btn-refresh" class="btn btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+        Refresh
+      </button>
+      <button id="btn-dev-filter" class="btn btn-toggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+        Dev Servers
+      </button>
+      <button id="btn-compact" class="btn btn-toggle">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+        Compact
+      </button>
+      <div class="toolbar-spacer"></div>
+      <div class="toolbar-group">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="toolbar-icon-muted"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <select id="auto-refresh">
+          <option value="2000">2s</option>
+          <option value="3000" selected>3s</option>
+          <option value="5000">5s</option>
+          <option value="10000">10s</option>
+          <option value="0">Off</option>
+        </select>
+      </div>
+      <div class="toolbar-group filter-group">
+        <div class="filter-wrapper">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="filter-icon"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" id="filter" placeholder="Filter..." autocomplete="off">
+        </div>
+      </div>
+    </header>
+
+    <!-- Table -->
+    <div class="table-container">
+      <table id="port-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="port">Port <span class="sort-arrow"></span></th>
+            <th>Address</th>
+            <th class="sortable" data-sort="pid">PID <span class="sort-arrow"></span></th>
+            <th class="sortable" data-sort="processName">Process <span class="sort-arrow"></span></th>
+            <th>Command Line</th>
+            <th class="col-action">Action</th>
+          </tr>
+        </thead>
+        <tbody id="table-body">
+          <tr><td colspan="6" class="empty-state">Scanning...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Status bar -->
+    <footer class="status-bar">
+      <span id="port-count">0 ports</span>
+      <span class="status-dot"></span>
+      <span id="last-scan">Last scan: --:--:--</span>
+    </footer>
+  </div>
+
+  <!-- Kill confirmation dialog -->
+  <div id="kill-dialog" class="dialog-overlay hidden">
+    <div class="dialog">
+      <div class="dialog-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <p class="dialog-title">Kill Process</p>
+      </div>
+      <p id="kill-dialog-msg"></p>
+      <div class="dialog-actions">
+        <button id="kill-cancel" class="btn">Cancel</button>
+        <button id="kill-confirm" class="btn btn-danger">Kill Process</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
